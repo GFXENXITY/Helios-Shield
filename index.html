@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>HELIO-RADAR // Multi-Planet Solar Storm & Prediction Command</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-void: #07080d;
+      --bg-Format: #0e111a;
+      --bg-card: #151926;
+      --bg-card-hi: #1c2233;
+      --border: #262e45;
+      --border-active: #00e5ff;
+      --text-white: #ffffff;
+      --text-lt: #d1d9f0;
+      --text-dim: #7e8ba8;
+      --cyan: #00e5ff;
+      --lime: #00f59b;
+      --gold: #ffb800;
+      --crimson: #ff2a5f;
+      --violet: #b57cff;
+      --font-head: 'Space Grotesk', sans-serif;
+      --font-sans: 'Plus Jakarta Sans', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg-void);
+      color: var(--text-white);
+      font-family: var(--font-sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Master Widescreen Bento Architecture */
+    .command-deck {
+      display: grid;
+      grid-template-columns: 1fr 430px;
+      grid-template-rows: 62px 1fr 142px;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* 1. TOP PLANETARY & TELEMETRY RIBBON */
+    .top-ribbon {
+      grid-column: 1 / 3;
+      background: var(--bg-Format);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 22px;
+      z-index: 20;
+    }
+
+    .brand-block {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .brand-logo {
+      font-family: var(--font-head);
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .live-status-chip {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      background: rgba(0, 245, 155, 0.12);
+      border: 1px solid rgba(0, 245, 155, 0.4);
+      color: var(--lime);
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 600;
+      padding: 5px 11px;
+      border-radius: 6px;
+    }
+
+    .live-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--lime);
+      box-shadow: 0 0 8px var(--lime);
+      animation: blink 1.4s infinite;
+    }
+    @keyframes blink { 0%, 100% { opacity: 1; } 50% { opacity: 0.25; } }
+
+    /* Top Planetary Target Bar (Mercury, Venus, Earth, Mars) */
+    .planet-selector-bar {
+      display: flex;
+      gap: 8px;
+    }
+
+    .planet-tab {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 13px;
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .planet-tab:hover { border-color: var(--cyan); background: var(--bg-card-hi); }
+    .planet-tab.selected {
+      border-color: var(--cyan);
+      background: rgba(0, 229, 255, 0.12);
+      box-shadow: 0 0 14px rgba(0, 229, 255, 0.2);
+    }
+
+    .planet-tab-name {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .planet-tab-status {
+      font-family: var(--font-mono);
+      font-size: 10.5px;
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      background: rgba(255, 255, 255, 0.08);
+    }
+
+    /* 2. LEFT/CENTER MAIN VISUAL STAGE */
+    .visual-stage {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      background: #04060b;
+      overflow: hidden;
+    }
+
+    #stage-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+      cursor: grab;
+    }
+    #stage-canvas:active { cursor: grabbing; }
+
+    /* Stage View Mode Switcher Overlay */
+    .stage-hud-top {
+      position: absolute;
+      top: 14px;
+      left: 16px;
+      right: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .stage-mode-group {
+      pointer-events: auto;
+      display: flex;
+      gap: 5px;
+      background: rgba(14, 17, 26, 0.9);
+      border: 1px solid var(--border);
+      padding: 4px;
+      border-radius: 10px;
+      backdrop-filter: blur(12px);
+    }
+
+    .stage-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-lt);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 13px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .stage-btn:hover { color: #fff; background: rgba(255, 255, 255, 0.06); }
+    .stage-btn.active {
+      background: var(--cyan);
+      color: #04060b;
+    }
+
+    .stage-legend {
+      background: rgba(14, 17, 26, 0.9);
+      border: 1px solid var(--border);
+      padding: 7px 12px;
+      border-radius: 8px;
+      display: flex;
+      gap: 14px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-lt);
+      backdrop-filter: blur(12px);
+    }
+
+    /* 3. RIGHT COMMAND & PREDICTION DOCK */
+    .right-dock {
+      background: var(--bg-Format);
+      border-left: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    .dock-nav {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-bottom: 1px solid var(--border);
+      background: #0a0c14;
+    }
+
+    .dock-tab {
+      background: transparent;
+      border: none;
+      border-bottom: 3px solid transparent;
+      color: var(--text-dim);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 13px 6px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .dock-tab:hover { color: #fff; }
+    .dock-tab.active {
+      color: var(--cyan);
+      border-bottom-color: var(--cyan);
+      background: rgba(0, 229, 255, 0.05);
+    }
+
+    .dock-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .dock-body::-webkit-scrollbar { width: 4px; }
+    .dock-body::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+    /* Storm & Prediction Cards */
+    .storm-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-left: 4px solid var(--gold);
+      border-radius: 10px;
+      padding: 12px 14px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .storm-card:hover { border-color: var(--cyan); background: var(--bg-card-hi); }
+    .storm-card.in-flight { border-left-color: var(--crimson); }
+    .storm-card.predicted { border-left-color: var(--violet); }
+
+    .storm-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+    .storm-id {
+      font-family: var(--font-head);
+      font-size: 14px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .storm-tag {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      font-weight: 700;
+      padding: 3px 7px;
+      border-radius: 4px;
+    }
+    .tag-flight { background: rgba(255, 42, 95, 0.2); color: #ff809f; border: 1px solid var(--crimson); }
+    .tag-pred   { background: rgba(181, 124, 255, 0.2); color: #d6b8ff; border: 1px solid var(--violet); }
+
+    .storm-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      background: rgba(7, 8, 13, 0.55);
+      padding: 8px 10px;
+      border-radius: 7px;
+      margin-bottom: 7px;
+      font-size: 11.5px;
+    }
+
+    .storm-planets {
+      font-size: 12px;
+      font-weight: 700;
+      padding-top: 4px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    /* Personal Safety & Planetary Inspector Cards */
+    .inspector-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 11px;
+      padding: 14px;
+    }
+
+    .inspector-title {
+      font-size: 11px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      color: var(--text-dim);
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    select {
+      width: 100%;
+      background: var(--bg-Format);
+      color: #fff;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      font-family: var(--font-sans);
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 10px;
+      outline: none;
+    }
+
+    .danger-time-banner {
+      background: rgba(255, 42, 95, 0.12);
+      border: 1px solid rgba(255, 42, 95, 0.45);
+      border-left: 4px solid var(--crimson);
+      border-radius: 8px;
+      padding: 11px 12px;
+      margin-bottom: 10px;
+    }
+
+    .checklist {
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+    }
+    .check-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-Format);
+      border: 1px solid var(--border);
+      padding: 9px 11px;
+      border-radius: 8px;
+      font-size: 12.5px;
+    }
+
+    /* Live Solar Feed Box inside Tab 3 */
+    .sdo-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      max-height: 250px;
+      background: #020408;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    #sdo-fallback-canvas, #sdo-live-img {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    /* 4. MASSIVE INTERACTIVE TIMELINE DECK AT BOTTOM (142px TALL) */
+    .timeline-deck {
+      grid-column: 1 / 3;
+      background: #0a0d16;
+      border-top: 2px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      padding: 10px 22px 12px 22px;
+      gap: 8px;
+      z-index: 25;
+    }
+
+    .timeline-controls-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .transport-btns {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .t-btn {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      color: var(--text-lt);
+      font-family: var(--font-sans);
+      font-size: 12px;
+      font-weight: 700;
+      padding: 7px 14px;
+      border-radius: 7px;
+      cursor: pointer;
+      transition: 0.15s;
+    }
+    .t-btn:hover { border-color: var(--cyan); color: #fff; }
+    .t-btn.live-btn {
+      background: rgba(0, 245, 155, 0.16);
+      border-color: var(--lime);
+      color: var(--lime);
+    }
+    .t-btn.play-btn {
+      background: var(--cyan);
+      border-color: var(--cyan);
+      color: #05070c;
+      min-width: 88px;
+    }
+
+    .timeline-readout {
+      font-family: var(--font-mono);
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--cyan);
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      padding: 6px 14px;
+      border-radius: 7px;
+    }
+
+    .timeline-canvas-wrap {
+      position: relative;
+      width: 100%;
+      flex: 1;
+      background: #06080f;
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      overflow: hidden;
+      cursor: ew-resize;
+    }
+
+    #timeline-canvas {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="command-deck">
+    <!-- 1. TOP RIBBON WITH MULTI-PLANET SELECTOR -->
+    <header class="top-ribbon">
+      <div class="brand-block">
+        <div class="brand-logo">☀️ HELIO-RADAR // PLANETARY STORM COMMAND</div>
+        <div class="live-status-chip">
+          <span class="live-dot"></span>
+          <span id="live-api-status">NOAA SWPC + NASA DONKI TELEMETRY</span>
+        </div>
+      </div>
+
+      <!-- Clickable Planetary Status Pills (Mercury, Venus, Earth, Mars) -->
+      <div class="planet-selector-bar">
+        <div class="planet-tab" data-planet="mercury" id="ptab-mercury">
+          <span class="planet-tab-name">☿ Mercury</span>
+          <span class="planet-tab-status" id="pstat-mercury">0.39 AU</span>
+        </div>
+        <div class="planet-tab" data-planet="venus" id="ptab-venus">
+          <span class="planet-tab-name">♀ Venus</span>
+          <span class="planet-tab-status" id="pstat-venus">0.72 AU</span>
+        </div>
+        <div class="planet-tab selected" data-planet="earth" id="ptab-earth">
+          <span class="planet-tab-name">🌍 Earth</span>
+          <span class="planet-tab-status" id="pstat-earth">1.00 AU</span>
+        </div>
+        <div class="planet-tab" data-planet="mars" id="ptab-mars">
+          <span class="planet-tab-name">♂ Mars</span>
+          <span class="planet-tab-status" id="pstat-mars">1.52 AU</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 2. MAIN VISUAL STAGE (HELIOSPHERE + EARTH MAP) -->
+    <main class="visual-stage" id="visual-stage">
+      <canvas id="stage-canvas"></canvas>
+
+      <div class="stage-hud-top">
+        <div class="stage-mode-group">
+          <button class="stage-btn active" data-view="split">⊞ Split Radar + Earth Map</button>
+          <button class="stage-btn" data-view="space">🪐 Full Planetary Radar (Mercury–Mars)</button>
+          <button class="stage-btn" data-view="earth">🛡️ Zoom: Earth Magnetosphere</button>
+          <button class="stage-btn" data-view="map">🌍 Full Earth Impact Map</button>
+        </div>
+
+        <div class="stage-legend">
+          <span style="color:var(--crimson)">● In-Flight CME (Already Erupted)</span>
+          <span style="color:var(--violet)">● Predicted Sunspot Flare (Upcoming)</span>
+          <span style="color:var(--cyan)">● Magnetic Shield</span>
+        </div>
+      </div>
+    </main>
+
+    <!-- 3. RIGHT COMMAND DOCK (3 CLEAN TABS) -->
+    <aside class="right-dock">
+      <div class="dock-nav">
+        <button class="dock-tab active" data-dtab="storms">🌊 Storms & Predictions</button>
+        <button class="dock-tab" data-dtab="safety">🛡️ Earth & Safety Guide</button>
+        <button class="dock-tab" data-dtab="sun">☀️ Live NASA Sun</button>
+      </div>
+
+      <!-- TAB 1: IN-FLIGHT CMEs (ALREADY ERUPTED) & MULTI-PLANET PREDICTIONS -->
+      <div class="dock-body" id="dpanel-storms">
+        <div style="font-size:12px; color:var(--text-lt); line-height:1.45;">
+          Flares that <strong>already erupted</strong> are shown traveling mid-flight across space right now. <strong>Predicted flares</strong> show which planet (Mercury, Venus, Earth, or Mars) they will hit when they erupt. Click any event to jump the timeline to it:
+        </div>
+        <div id="storm-cards-container" style="display:flex; flex-direction:column; gap:10px;"></div>
+      </div>
+
+      <!-- TAB 2: PERSONAL SAFETY, WHAT TO WEAR & SATELLITE ALERTS -->
+      <div class="dock-body" id="dpanel-safety" style="display:none;">
+        <div class="inspector-box">
+          <div class="inspector-title">
+            <span>Selected Planet Telemetry</span>
+            <span id="insp-planet-name" style="color:var(--cyan)">🌍 EARTH (1.00 AU)</span>
+          </div>
+          <div id="insp-planet-summary" style="font-size:12.5px; color:var(--text-lt); line-height:1.45;">
+            Monitoring incoming CME plasma waves across Earth's orbit.
+          </div>
+        </div>
+
+        <div class="inspector-box">
+          <div class="inspector-title">
+            <span>Your Earth Location (Or Click Map)</span>
+            <span id="loc-badge" style="color:var(--lime)">MONITORING</span>
+          </div>
+
+          <select id="location-select">
+            <option value="18.15,74.58,Baramati / Pune, India">📍 Baramati / Pune, India</option>
+            <option value="19.07,72.87,Mumbai, India">📍 Mumbai, India</option>
+            <option value="28.61,77.20,New Delhi, India">📍 New Delhi, India</option>
+            <option value="40.71,-74.00,New York, USA">📍 New York, USA</option>
+            <option value="51.50,-0.12,London, UK">📍 London, UK</option>
+            <option value="64.14,-21.94,Reykjavik, Iceland">📍 Reykjavik, Iceland</option>
+            <option value="35.67,139.65,Tokyo, Japan">📍 Tokyo, Japan</option>
+            <option value="-33.86,151.20,Sydney, Australia">📍 Sydney, Australia</option>
+          </select>
+
+          <div class="danger-time-banner" id="danger-banner">
+            <div style="font-size:10.5px; font-weight:800; color:var(--gold); text-transform:uppercase; margin-bottom:3px;">
+              🕒 WHEN NOT TO GO OUTSIDE (LOCAL TIME):
+            </div>
+            <div style="font-family:var(--font-mono); font-size:15.5px; font-weight:700; color:#fff; margin-bottom:3px;" id="out-avoid-time">
+              11:00 AM – 03:30 PM (During CME Arrival)
+            </div>
+            <div style="font-size:11.5px; color:var(--text-lt);" id="out-avoid-sub">
+              Peak UV/X-ray & geomagnetic storm window when the in-flight CME reaches 1.0 AU.
+            </div>
+          </div>
+
+          <div class="checklist">
+            <div class="check-row">
+              <span style="color:var(--text-dim)">🕶️ Eyewear Outdoors</span>
+              <strong id="adv-eyes" style="color:var(--gold)">UV400 Polarized Glasses</strong>
+            </div>
+            <div class="check-row">
+              <span style="color:var(--text-dim)">👕 What to Wear</span>
+              <strong id="adv-clothes" style="color:var(--gold)">UPF 50+ Sleeves + SPF 50</strong>
+            </div>
+            <div class="check-row">
+              <span style="color:var(--text-dim)">🔌 EV & Home Power</span>
+              <strong id="adv-power" style="color:var(--lime)">Normal (Unplug on Impact)</strong>
+            </div>
+            <div class="check-row">
+              <span style="color:var(--text-dim)">🛰️ Satellites & GPS</span>
+              <strong id="adv-sats" style="color:var(--cyan)">Shield At 10.1 R_E</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: LIVE NASA SDO / NOAA SUVI SOLAR TELESCOPE -->
+      <div class="dock-body" id="dpanel-sun" style="display:none;">
+        <div class="inspector-box">
+          <div class="inspector-title">
+            <span>Live NASA / NOAA Solar Disk</span>
+            <span id="sdo-lbl" style="color:var(--gold)">SUVI 304Å</span>
+          </div>
+          <div class="sdo-frame">
+            <canvas id="sdo-fallback-canvas" width="250" height="250"></canvas>
+            <img id="sdo-live-img" src="https://services.swpc.noaa.gov/images/animations/suvi/primary/304/latest.png" alt="Live Sun" />
+          </div>
+          <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:6px;">
+            <button class="t-btn" data-sdo="https://services.swpc.noaa.gov/images/animations/suvi/primary/304/latest.png" data-lbl="SUVI 304Å">304Å Flare</button>
+            <button class="t-btn" data-sdo="https://sdo.gsfc.nasa.gov/assets/img/latest/latest_512_HMII.jpg" data-lbl="HMI SPOTS">Sunspots</button>
+            <button class="t-btn" data-sdo="https://services.swpc.noaa.gov/images/animations/suvi/primary/195/latest.png" data-lbl="SUVI 195Å">195Å Corona</button>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- 4. MASSIVE INTERACTIVE TIMELINE DECK AT THE BOTTOM (142px TALL) -->
+    <footer class="timeline-deck">
+      <div class="timeline-controls-bar">
+        <div class="transport-btns">
+          <button class="t-btn play-btn" id="btn-play">⏸ PAUSE</button>
+          <button class="t-btn live-btn" id="btn-live-now">🔴 LIVE NOW (0.0h)</button>
+          <button class="t-btn" id="btn-step-back">⏪ -6 Hours</button>
+          <button class="t-btn" id="btn-step-fwd">⏩ +6 Hours</button>
+          <button class="t-btn" id="btn-warp-speed">⚡ Speed: 2 hr/sec</button>
+        </div>
+
+        <div class="timeline-readout" id="timeline-clock-readout">
+          LIVE TIME: 0.0h (IN-FLIGHT CMEs ACTIVE)
+        </div>
+      </div>
+
+      <!-- Interactive Multi-Event Timeline Canvas (Drag Anywhere to Scrub -48h to +48h) -->
+      <div class="timeline-canvas-wrap" id="timeline-wrap" title="Click or drag anywhere on the timeline to scrub through past launches and future planetary impacts">
+        <canvas id="timeline-canvas"></canvas>
+      </div>
+    </footer>
+  </div>
+
+  <!-- MULTI-PLANET IN-FLIGHT CME & PREDICTION ENGINE -->
+  <script>
+    (function () {
+      const stageCanvas = document.getElementById('stage-canvas');
+      const ctx = stageCanvas.getContext('2d');
+      const stageWrap = document.getElementById('visual-stage');
+
+      const tlCanvas = document.getElementById('timeline-canvas');
+      const tlCtx = tlCanvas.getContext('2d');
+      const tlWrap = document.getElementById('timeline-wrap');
+
+      let W = 800, H = 600, TL_W = 1000, TL_H = 74;
+
+      function resizeCanvases() {
+        const sRect = stageWrap.getBoundingClientRect();
+        W = Math.max(300, Math.floor(sRect.width));
+        H = Math.max(200, Math.floor(sRect.height));
+        stageCanvas.width = W;
+        stageCanvas.height = H;
+
+        const tRect = tlWrap.getBoundingClientRect();
+        TL_W = Math.max(300, Math.floor(tRect.width));
+        TL_H = Math.max(50, Math.floor(tRect.height));
+        tlCanvas.width = TL_W;
+        tlCanvas.height = TL_H;
+      }
+      window.addEventListener('resize', resizeCanvases);
+      resizeCanvases();
+
+      const AU_KM = 149597870.7;
+      const SUN_NX = -0.28;
+      const SUN_NY = 0.0;
+      const SUN_NR = 0.068;
+      const ONE_AU_SCENE = 0.56;
+
+      const state = {
+        viewMode: 'split',
+        selectedPlanet: 'earth',
+        anchorNowMs: Date.now(),
+        offsetHours: 0.0, // Starts at 0.0h (LIVE NOW) with past flares already mid-flight in space!
+        playing: true,
+        warpHrsPerSec: 2.0,
+        vSw: 410,
+        gamma: 1.0e-7,
+        userLat: 18.15,
+        userLon: 74.58,
+        userName: 'Baramati / Pune, India',
+        earthImpactIntensity: 0.0
+      };
+
+      const earthMapImage = new Image();
+      let earthMapReady = false;
+      earthMapImage.onload = () => { earthMapReady = true; };
+      earthMapImage.src = 'https://unpkg.com/three-globe@2.31.1/example/img/earth-blue-marble.jpg';
+
+      // ======================================================================
+      // 1. REAL ASTRONOMICAL PLANETARY ORBITS (MERCURY, VENUS, EARTH, MARS)
+      // ======================================================================
+      const PLANETS = [
+        {
+          id: 'mercury', name: 'Mercury', icon: '☿', color: '#94a3b8', radius: 0.011, shieldR: 0.024,
+          a: 0.387098, e: 0.205630, L0: 252.2509, dL: 4.09233445, wbar: 77.4561, hitNow: 0
+        },
+        {
+          id: 'venus', name: 'Venus', icon: '♀', color: '#ffb800', radius: 0.018, shieldR: 0.034,
+          a: 0.723332, e: 0.006772, L0: 181.9798, dL: 1.60213034, wbar: 131.5637, hitNow: 0
+        },
+        {
+          id: 'earth', name: 'Earth', icon: '🌍', color: '#00e5ff', radius: 0.022, shieldR: 0.074,
+          a: 1.000000, e: 0.016708, L0: 100.4664, dL: 0.98560911, wbar: 102.9373, hitNow: 0
+        },
+        {
+          id: 'mars', name: 'Mars', icon: '♂', color: '#ff5555', radius: 0.016, shieldR: 0.032,
+          a: 1.523679, e: 0.093400, L0: 355.4330, dL: 0.52403295, wbar: 336.0602, hitNow: 0
+        }
+      ];
+
+      function updatePlanetaryOrbits(simTimeMs) {
+        const jd = simTimeMs / 86400000 + 2440587.5;
+        const d = jd - 2451545.0;
+        let earthLon = 0;
+
+        PLANETS.forEach((pl) => {
+          const L = ((pl.L0 + pl.dL * d) % 360 + 360) % 360;
+          const Mdeg = ((L - pl.wbar) % 360 + 360) % 360;
+          const M = (Mdeg * Math.PI) / 180;
+          let E = M;
+          for (let i = 0; i < 5; i++) {
+            E = E - (E - pl.e * Math.sin(E) - M) / (1 - pl.e * Math.cos(E));
+          }
+          const xv = pl.a * (Math.cos(E) - pl.e);
+          const yv = pl.a * Math.sqrt(1 - pl.e * pl.e) * Math.sin(E);
+          pl.rAu = Math.hypot(xv, yv);
+          pl.trueLonRad = Math.atan2(yv, xv) + (pl.wbar * Math.PI) / 180;
+          if (pl.id === 'earth') earthLon = pl.trueLonRad;
+        });
+
+        PLANETS.forEach((pl) => {
+          pl.relAngle = pl.trueLonRad - earthLon; // Angle relative to Sun-Earth line
+          const rScene = pl.rAu * ONE_AU_SCENE;
+          pl.wx = SUN_NX + Math.cos(pl.relAngle) * rScene;
+          pl.wy = SUN_NY - Math.sin(pl.relAngle) * rScene;
+          pl.hitCount = 0;
+        });
+      }
+
+      // ======================================================================
+      // 2. DRAG-BASED CME PROPAGATION SOLVER & MULTI-PLANET HIT CALCULATOR
+      // ======================================================================
+      function solveCMEPosition(v0Kms, flightHours) {
+        if (flightHours <= 0) return { rAu: 0, vKms: v0Kms };
+        const tSec = flightHours * 3600;
+        const dv = v0Kms - state.vSw;
+        const gamma = state.gamma;
+        const r0Km = 1.05 * 696340;
+
+        const factor = 1 + gamma * Math.abs(dv) * tSec;
+        const vNow = state.vSw + dv / factor;
+        const rKm = r0Km + state.vSw * tSec + (Math.sign(dv) / gamma) * Math.log(factor);
+        return { rAu: rKm / AU_KM, vKms: vNow };
+      }
+
+      function computeTransitHoursToAU(v0Kms, targetAu) {
+        for (let h = 0.5; h <= 140; h += 0.5) {
+          if (solveCMEPosition(v0Kms, h).rAu >= targetAu) return h;
+        }
+        return 60.0;
+      }
+
+      // Compute exact hit percentage & arrival hour for ALL 4 PLANETS (Mercury, Venus, Earth, Mars)!
+      function analyzePlanetaryHits(lonDeg, halfAngleDeg, v0Kms, launchOffsetHours) {
+        updatePlanetaryOrbits(state.anchorNowMs + launchOffsetHours * 3600000);
+        const flareRad = (lonDeg * Math.PI) / 180;
+        const coneRad = (halfAngleDeg * Math.PI) / 180;
+
+        const hits = [];
+        let earthHitPct = 0;
+
+        PLANETS.forEach((pl) => {
+          const diff = Math.abs(Math.atan2(Math.sin(flareRad - pl.relAngle), Math.cos(flareRad - pl.relAngle)));
+          if (diff < coneRad) {
+            const pct = Math.round(Math.pow(Math.cos((diff / coneRad) * (Math.PI * 0.5)), 1.15) * 100);
+            if (pct >= 8) {
+              const transitHrs = computeTransitHoursToAU(v0Kms, pl.rAu);
+              const impactOffsetHrs = launchOffsetHours + transitHrs;
+              hits.push({
+                planetId: pl.id,
+                planetName: pl.name,
+                icon: pl.icon,
+                color: pl.color,
+                pct,
+                transitHrs,
+                impactOffsetHrs
+              });
+              if (pl.id === 'earth') earthHitPct = pct;
+            }
+          }
+        });
+
+        let sideLabel = 'Earth-Facing Center';
+        if (lonDeg > 40) sideLabel = 'West Limb';
+        else if (lonDeg > 14) sideLabel = 'West Flank';
+        else if (lonDeg < -40) sideLabel = 'East Limb';
+        else if (lonDeg < -14) sideLabel = 'East Flank';
+
+        return { sideLabel, hits, earthHitPct };
+      }
+
+      // ======================================================================
+      // 3. IN-FLIGHT HISTORICAL CMEs (ALREADY ERUPTED) + UPCOMING PREDICTIONS
+      // ======================================================================
+      const PARTICLES_PER_EVENT = 230;
+      const solarEvents = [];
+
+      function createSolarEvent(cfg) {
+        const pSeeds = [];
+        for (let i = 0; i < PARTICLES_PER_EVENT; i++) {
+          const isGravLoop = i < 45;
+          const isShock = i >= 175;
+          pSeeds.push({
+            kind: isGravLoop ? 1 : (isShock ? 3 : 2),
+            u: (Math.random() - 0.5) * 2.0,
+            radialSpread: isShock ? (0.94 + Math.random() * 0.06) : (0.72 + Math.random() * 0.24),
+            swirlPhase: Math.random() * Math.PI * 2,
+            gravSpeed: 0.16 + Math.random() * 0.32
+          });
+        }
+
+        const analysis = analyzePlanetaryHits(cfg.lonDeg, cfg.halfAngleDeg || 34, cfg.v0, cfg.launchOffsetHours);
+        return {
+          id: cfg.id,
+          type: cfg.launchOffsetHours <= 0 ? 'IN-FLIGHT' : 'PREDICTED',
+          cls: cfg.cls,
+          launchOffsetHours: cfg.launchOffsetHours, // Negative = Already happened! Positive = Upcoming prediction!
+          lonDeg: cfg.lonDeg,
+          latDeg: cfg.latDeg || -6,
+          v0: cfg.v0,
+          halfAngleDeg: cfg.halfAngleDeg || 34,
+          bz: cfg.bz || -28,
+          sideLabel: analysis.sideLabel,
+          hits: analysis.hits,
+          earthHitPct: analysis.earthHitPct,
+          pSeeds
+        };
+      }
+
+      function buildInitialEvents() {
+        updatePlanetaryOrbits(state.anchorNowMs);
+        const venusAngleDeg = Math.round((PLANETS[1].relAngle * 180) / Math.PI);
+        const mercuryAngleDeg = Math.round((PLANETS[0].relAngle * 180) / Math.PI);
+        const marsAngleDeg = Math.round((PLANETS[3].relAngle * 180) / Math.PI);
+
+        solarEvents.length = 0;
+
+        // 1. ALREADY ERUPTED (-15.5h ago): Fast Earth-Directed CME currently at ~0.72 AU in space!
+        solarEvents.push(createSolarEvent({
+          id: 'CME-AR3854', cls: 'X2.8 CME', launchOffsetHours: -15.5,
+          lonDeg: 3, latDeg: -5, v0: 1720, halfAngleDeg: 36, bz: -36
+        }));
+
+        // 2. ALREADY ERUPTED (-24.0h ago): Aimed directly at VENUS & MARS orbital sector, already at ~0.88 AU!
+        solarEvents.push(createSolarEvent({
+          id: 'CME-AR3852', cls: 'M6.4 CME', launchOffsetHours: -24.0,
+          lonDeg: venusAngleDeg, latDeg: 12, v0: 1320, halfAngleDeg: 35, bz: -24
+        }));
+
+        // 3. ALREADY ERUPTED (-5.0h ago): Fresh eruption aimed at MERCURY's orbital sector, currently at ~0.26 AU!
+        solarEvents.push(createSolarEvent({
+          id: 'FLR-AR3857', cls: 'M4.2 CME', launchOffsetHours: -5.0,
+          lonDeg: mercuryAngleDeg, latDeg: -11, v0: 1480, halfAngleDeg: 32, bz: -22
+        }));
+
+        // 4. UPCOMING PREDICTION (+6.5h in future): Unstable Sunspot predicted to erupt toward Earth & Mars!
+        solarEvents.push(createSolarEvent({
+          id: 'PRED-AR3860', cls: '75% X-Flare Risk', launchOffsetHours: +6.5,
+          lonDeg: Math.round(marsAngleDeg * 0.4), latDeg: 8, v0: 1950, halfAngleDeg: 38, bz: -40
+        }));
+
+        renderStormCardsUI();
+      }
+      buildInitialEvents();
+
+      // Fetch Live NASA DONKI & NOAA SWPC Telemetry to Enrich Events
+      async function fetchLiveSpaceWeather() {
+        try {
+          const wRes = await fetch('https://services.swpc.noaa.gov/products/solar-wind/plasma-5-minute.json');
+          if (wRes.ok) {
+            const rows = await wRes.json();
+            if (Array.isArray(rows) && rows.length > 2) {
+              const spd = Math.round(parseFloat(rows[rows.length - 1][2]) || 410);
+              state.vSw = spd;
+              document.getElementById('live-api-status').textContent = `LIVE NOAA WIND: ${spd} KM/S • ${solarEvents.length} EVENTS TRACKED`;
+            }
+          }
+        } catch (e) {}
+      }
+      fetchLiveSpaceWeather();
+
+      function renderStormCardsUI() {
+        const container = document.getElementById('storm-cards-container');
+        container.innerHTML = '';
+
+        solarEvents.forEach((ev) => {
+          const flightHrsNow = state.offsetHours - ev.launchOffsetHours;
+          const posNow = solveCMEPosition(ev.v0, Math.max(0, flightHrsNow));
+          const isInFlight = flightHrsNow > 0;
+
+          const hitSummary = ev.hits.length > 0
+            ? ev.hits.map(h => `${h.icon} ${h.planetName} (${h.pct}% at ${h.impactOffsetHrs >= 0 ? '+' : ''}${h.impactOffsetHrs.toFixed(1)}h)`).join(' • ')
+            : '🌌 Deep Space (Misses Inner Planets)';
+
+          const card = document.createElement('div');
+          card.className = `storm-card ${isInFlight ? 'in-flight' : 'predicted'}`;
+          card.innerHTML = `
+            <div class="storm-head">
+              <span class="storm-id">${ev.id} (${ev.cls})</span>
+              <span class="storm-tag ${isInFlight ? 'tag-flight' : 'tag-pred'}">
+                ${isInFlight ? `🚀 IN-FLIGHT (${posNow.rAu.toFixed(2)} AU)` : `🔮 PREDICTED (${ev.launchOffsetHours >= 0 ? '+' : ''}${ev.launchOffsetHours.toFixed(1)}h)`}
+              </span>
+            </div>
+            <div class="storm-grid">
+              <div><span style="color:var(--text-dim)">Erupted:</span> <strong>${ev.launchOffsetHours >= 0 ? '+' : ''}${ev.launchOffsetHours.toFixed(1)}h</strong></div>
+              <div><span style="color:var(--text-dim)">Speed:</span> <strong>${ev.v0} km/s</strong></div>
+              <div><span style="color:var(--text-dim)">Sun Side:</span> <strong>${ev.sideLabel}</strong></div>
+              <div><span style="color:var(--text-dim)">Earth Hit:</span> <strong style="color:${ev.earthHitPct > 0 ? 'var(--crimson)' : 'var(--lime)'}">${ev.earthHitPct}%</strong></div>
+            </div>
+            <div class="storm-planets" style="color:${ev.hits.length > 0 ? 'var(--cyan)' : 'var(--text-dim)'}">
+              <span>🎯 ${hitSummary}</span>
+            </div>
+          `;
+
+          card.addEventListener('click', () => {
+            // Jump timeline to see this wave mid-flight (or impacting its first planet)
+            state.offsetHours = ev.hits.length > 0 ? ev.hits[0].impactOffsetHrs : (ev.launchOffsetHours + 6.0);
+          });
+          container.appendChild(card);
+        });
+      }
+
+      // ======================================================================
+      // 4. RENDER MULTI-PLANET HELIOSPHERE & IN-FLIGHT CME WAVES
+      // ======================================================================
+      const AMBIENT_P = Array.from({ length: 120 }, () => ({
+        angle: (Math.random() - 0.5) * Math.PI * 2,
+        speed: 0.22 + Math.random() * 0.25,
+        phase: Math.random()
+      }));
+
+      const stars = Array.from({ length: 260 }, () => ({
+        u: Math.random(),
+        v: Math.random(),
+        s: 0.6 + Math.random() * 1.3,
+        a: 0.25 + Math.random() * 0.6
+      }));
+
+      function drawSpaceRadar(vpX, vpY, vpW, vpH, elapsed, simTimeMs) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(vpX, vpY, vpW, vpH);
+        ctx.clip();
+
+        const earthPl = PLANETS[2];
+        const isEarthZoom = state.viewMode === 'earth';
+        const camCenterX = isEarthZoom ? earthPl.wx + 0.02 : -0.02;
+        const camScale = isEarthZoom ? Math.min(vpW, vpH) * 2.45 : Math.min(vpW * 0.62, vpH * 1.05);
+
+        function toSX(nx) { return vpX + vpW * 0.48 + (nx - camCenterX) * camScale; }
+        function toSY(ny) { return vpY + vpH * 0.50 + ny * camScale; }
+
+        const bg = ctx.createRadialGradient(vpX + vpW * 0.5, vpY + vpH * 0.5, 10, vpX + vpW * 0.5, vpY + vpH * 0.5, Math.max(vpW, vpH) * 0.75);
+        bg.addColorStop(0, '#091326');
+        bg.addColorStop(1, '#04060b');
+        ctx.fillStyle = bg;
+        ctx.fillRect(vpX, vpY, vpW, vpH);
+
+        for (let i = 0; i < stars.length; i++) {
+          const st = stars[i];
+          ctx.fillStyle = `rgba(210, 230, 255, ${st.a})`;
+          ctx.fillRect(vpX + st.u * vpW, vpY + st.v * vpH, st.s, st.s);
+        }
+
+        const sunSX = toSX(SUN_NX);
+        const sunSY = toSY(SUN_NY);
+
+        // 1. Draw Real Astronomical Orbits for Mercury, Venus, Earth & Mars
+        PLANETS.forEach((pl) => {
+          const isSel = state.selectedPlanet === pl.id;
+          ctx.strokeStyle = isSel ? 'rgba(0, 229, 255, 0.38)' : 'rgba(148, 163, 184, 0.14)';
+          ctx.lineWidth = isSel ? 1.6 : 1.0;
+          ctx.beginPath();
+          ctx.arc(sunSX, sunSY, pl.rAu * ONE_AU_SCENE * camScale, 0, Math.PI * 2);
+          ctx.stroke();
+        });
+
+        // 2. Subtle Ambient Solar Wind (120 particles)
+        ctx.strokeStyle = 'rgba(0, 229, 255, 0.12)';
+        ctx.lineWidth = 1.0;
+        ctx.beginPath();
+        for (let i = 0; i < AMBIENT_P.length; i++) {
+          const ap = AMBIENT_P[i];
+          const frac = (ap.phase + elapsed * 0.05 * ap.speed) % 1.0;
+          const r = SUN_NR + frac * (1.6 * ONE_AU_SCENE);
+          const rPrev = Math.max(SUN_NR, r - 0.016);
+          const aNow = ap.angle - frac * 0.38;
+          const aPrv = ap.angle - (frac - 0.02) * 0.38;
+          ctx.moveTo(toSX(SUN_NX + Math.cos(aPrv) * rPrev), toSY(SUN_NY + Math.sin(aPrv) * rPrev));
+          ctx.lineTo(toSX(SUN_NX + Math.cos(aNow) * r), toSY(SUN_NY + Math.sin(aNow) * r));
+        }
+        ctx.stroke();
+
+        // 3. Draw All In-Flight CMEs & Upcoming Predicted Flares!
+        const buckets = [[], [], []];
+        let maxEarthImpact = 0.0;
+
+        solarEvents.forEach((fl) => {
+          const flightHours = state.offsetHours - fl.launchOffsetHours;
+          const baseRad = -(fl.lonDeg * Math.PI) / 180;
+          const halfConeRad = (fl.halfAngleDeg * Math.PI) / 180;
+
+          // If this is a future predicted flare (flightHours <= 0), draw its pulsing magnetic buildup & prediction cone!
+          if (flightHours <= 0) {
+            ctx.save();
+            ctx.strokeStyle = 'rgba(181, 124, 255, 0.32)';
+            ctx.setLineDash([4, 4]);
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            ctx.moveTo(sunSX, sunSY);
+            ctx.lineTo(toSX(SUN_NX + Math.cos(baseRad - halfConeRad) * ONE_AU_SCENE * 1.25), toSY(SUN_NY + Math.sin(baseRad - halfConeRad) * ONE_AU_SCENE * 1.25));
+            ctx.moveTo(sunSX, sunSY);
+            ctx.lineTo(toSX(SUN_NX + Math.cos(baseRad + halfConeRad) * ONE_AU_SCENE * 1.25), toSY(SUN_NY + Math.sin(baseRad + halfConeRad) * ONE_AU_SCENE * 1.25));
+            ctx.stroke();
+            ctx.restore();
+            return;
+          }
+
+          if (flightHours > 90) return;
+
+          const cmeState = solveCMEPosition(fl.v0, flightHours);
+          const leadSceneDist = SUN_NR + cmeState.rAu * (ONE_AU_SCENE - SUN_NR);
+
+          for (let i = 0; i < fl.pSeeds.length; i++) {
+            const sd = fl.pSeeds[i];
+
+            if (sd.kind === 1) {
+              // Solar Gravity Fallback Loops near the Sun
+              if (flightHours > 18) continue;
+              const loopCycle = (flightHours * 0.8 + sd.swirlPhase) % 1.0;
+              const h = Math.sin(loopCycle * Math.PI) * (0.032 + sd.gravSpeed * 0.075);
+              const ang = baseRad + sd.u * 0.22;
+              const rNow = SUN_NR + h;
+              const rPrv = SUN_NR + Math.sin(Math.max(0, loopCycle - 0.06) * Math.PI) * (0.032 + sd.gravSpeed * 0.075);
+              buckets[0].push(
+                toSX(SUN_NX + Math.cos(ang - 0.02) * rPrv), toSY(SUN_NY + Math.sin(ang - 0.02) * rPrv),
+                toSX(SUN_NX + Math.cos(ang) * rNow), toSY(SUN_NY + Math.sin(ang) * rNow)
+              );
+              continue;
+            }
+
+            const ang = baseRad + sd.u * halfConeRad;
+            const crescentShape = Math.pow(Math.cos(sd.u * Math.PI * 0.44), 0.6);
+            const rDist = SUN_NR + (leadSceneDist - SUN_NR) * sd.radialSpread * crescentShape;
+            if (rDist <= SUN_NR + 0.005 || rDist > 1.72 * ONE_AU_SCENE) continue;
+
+            const swirl = Math.sin(sd.swirlPhase + flightHours * 1.1) * 0.012 * (rDist / ONE_AU_SCENE);
+            let wx = SUN_NX + Math.cos(ang + swirl) * rDist;
+            let wy = SUN_NY + Math.sin(ang + swirl) * rDist;
+
+            let wxPrev = SUN_NX + Math.cos(ang + swirl) * Math.max(SUN_NR, rDist - 0.020);
+            let wyPrev = SUN_NY + Math.sin(ang + swirl) * Math.max(SUN_NR, rDist - 0.020);
+
+            // Check Collision with All 4 Planets
+            for (let p = 0; p < PLANETS.length; p++) {
+              const pl = PLANETS[p];
+              const dxP = wx - pl.wx;
+              const dyP = wy - pl.wy;
+              const distP = Math.hypot(dxP, dyP);
+
+              if (distP < pl.shieldR * 1.25) {
+                pl.hitCount++;
+                if (pl.id === 'earth' && Math.abs(dyP) > pl.shieldR * 0.38 && dxP < 0 && fl.bz < -15 && (i % 3 === 0)) {
+                  wx = pl.wx + dxP * 0.45;
+                  wy = pl.wy + Math.sign(dyP) * 0.024;
+                } else if (distP < pl.shieldR) {
+                  const push = pl.shieldR / Math.max(0.001, distP);
+                  wx = pl.wx + dxP * push;
+                  wy = pl.wy + dyP * push * 1.18;
+                }
+              }
+            }
+
+            const bIdx = sd.kind === 3 ? 2 : 1;
+            buckets[bIdx].push(toSX(wxPrev), toSY(wyPrev), toSX(wx), toSY(wy));
+          }
+
+          if (fl.earthHitPct > 5) {
+            const pulse = Math.exp(-Math.pow((cmeState.rAu - 1.0) / 0.14, 2)) * (fl.earthHitPct / 100);
+            if (pulse > maxEarthImpact) maxEarthImpact = pulse;
+          }
+        });
+
+        state.earthImpactIntensity += (maxEarthImpact - state.earthImpactIntensity) * 0.16;
+
+        PLANETS.forEach((pl) => {
+          const targetHit = Math.min(1.0, pl.hitCount / (pl.id === 'earth' ? 12 : 6));
+          pl.hitNow += (targetHit - pl.hitNow) * 0.18;
+        });
+
+        const layerStyles = [
+          { col: 'rgba(255, 42, 95, 0.72)',  w: 1.5 }, // 0: Gravity Fallback Loops
+          { col: 'rgba(255, 184, 0, 0.78)',  w: 1.8 }, // 1: CME Plasma Body
+          { col: 'rgba(255, 252, 210, 0.94)', w: 2.3 } // 2: Leading Shock Front
+        ];
+
+        for (let b = 0; b < 3; b++) {
+          const arr = buckets[b];
+          if (!arr.length) continue;
+          ctx.strokeStyle = layerStyles[b].col;
+          ctx.lineWidth = layerStyles[b].w;
+          ctx.beginPath();
+          for (let j = 0; j < arr.length; j += 4) {
+            ctx.moveTo(arr[j], arr[j + 1]);
+            ctx.lineTo(arr[j + 2], arr[j + 3]);
+          }
+          ctx.stroke();
+        }
+
+        // 4. Draw Sun
+        const sunSR = Math.max(9, SUN_NR * camScale);
+        const corona = ctx.createRadialGradient(sunSX, sunSY, sunSR * 0.4, sunSX, sunSY, sunSR * 2.3);
+        corona.addColorStop(0, 'rgba(255, 245, 200, 0.95)');
+        corona.addColorStop(0.35, 'rgba(249, 115, 22, 0.65)');
+        corona.addColorStop(0.7, 'rgba(220, 38, 38, 0.18)');
+        corona.addColorStop(1, 'rgba(0, 0, 0, 0)');
+        ctx.fillStyle = corona;
+        ctx.beginPath();
+        ctx.arc(sunSX, sunSY, sunSR * 2.3, 0, Math.PI * 2);
+        ctx.fill();
+
+        const sunBody = ctx.createRadialGradient(sunSX - sunSR * 0.2, sunSY - sunSR * 0.2, sunSR * 0.1, sunSX, sunSY, sunSR);
+        sunBody.addColorStop(0, '#fffbeb');
+        sunBody.addColorStop(0.55, '#fb923c');
+        sunBody.addColorStop(0.9, '#ea580c');
+        sunBody.addColorStop(1, '#7c2d12');
+        ctx.fillStyle = sunBody;
+        ctx.beginPath();
+        ctx.arc(sunSX, sunSY, sunSR, 0, Math.PI * 2);
+        ctx.fill();
+
+        // 5. Draw Mercury, Venus & Mars
+        PLANETS.forEach((pl) => {
+          if (pl.id === 'earth') return;
+          const psx = toSX(pl.wx);
+          const psy = toSY(pl.wy);
+          const pr = Math.max(4.5, pl.radius * camScale);
+
+          if (pl.hitNow > 0.08) {
+            ctx.strokeStyle = `rgba(255, 42, 95, ${0.45 + pl.hitNow * 0.55})`;
+            ctx.lineWidth = 2.2;
+            ctx.beginPath();
+            ctx.arc(psx, psy, pr * 2.2, -pl.relAngle + Math.PI - 1.1, -pl.relAngle + Math.PI + 1.1);
+            ctx.stroke();
+          }
+
+          ctx.fillStyle = pl.color;
+          ctx.beginPath();
+          ctx.arc(psx, psy, pr, 0, Math.PI * 2);
+          ctx.fill();
+
+          ctx.fillStyle = state.selectedPlanet === pl.id ? '#00e5ff' : '#d1d9f0';
+          ctx.font = '700 11px "Plus Jakarta Sans", sans-serif';
+          ctx.fillText(`${pl.icon} ${pl.name}`, psx - 24, psy + pr + 13);
+        });
+
+        // 6. Draw Earth & Realistic Magnetosphere
+        const earthSX = toSX(earthPl.wx);
+        const earthSY = toSY(earthPl.wy);
+        const earthSR = Math.max(7, earthPl.radius * camScale);
+
+        const impact = Math.max(state.earthImpactIntensity, earthPl.hitNow);
+        const comp = 1.0 - 0.42 * impact;
+        const recon = impact;
+
+        ctx.strokeStyle = recon > 0.3 ? 'rgba(255, 42, 95, 0.85)' : 'rgba(0, 229, 255, 0.52)';
+        ctx.lineWidth = 2.1;
+        ctx.beginPath();
+        for (let i = 0; i <= 60; i++) {
+          const theta = ((i / 60) - 0.5) * Math.PI * 1.52;
+          const rShue = 0.074 * comp * 1.28 * Math.pow(2.0 / (1.0 + Math.cos(theta)), 0.58);
+          const x = toSX(earthPl.wx - rShue * Math.cos(theta));
+          const y = toSY(earthPl.wy + rShue * Math.sin(theta));
+          if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+
+        [0.044, 0.060, 0.074].forEach((L, idx) => {
+          for (let hemi = -1; hemi <= 1; hemi += 2) {
+            const isOuter = idx === 2;
+            ctx.strokeStyle = (isOuter && recon > 0.3) ? 'rgba(255, 42, 95, 0.92)' : 'rgba(0, 229, 255, 0.55)';
+            ctx.lineWidth = isOuter ? 1.8 : 1.2;
+            ctx.beginPath();
+            for (let s = 0; s <= 28; s++) {
+              const u = s / 28;
+              const footLat = hemi * 1.22;
+              const noseLat = isOuter ? hemi * (recon * 0.38) : 0;
+              const lat = footLat + (noseLat - footLat) * u;
+              const r = L * comp * Math.sin(u * Math.PI * 0.5 + 0.2);
+              let nx = earthPl.wx - r * Math.cos(lat);
+              let ny = earthPl.wy + r * Math.sin(lat);
+
+              if (isOuter && recon > 0.2 && u > 0.45) {
+                const peel = Math.pow((u - 0.45) / 0.55, 1.4) * recon;
+                nx += peel * 0.20;
+                ny += hemi * peel * 0.05;
+              }
+              const sx = toSX(nx), sy = toSY(ny);
+              if (s === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+
+            ctx.strokeStyle = recon > 0.3 ? 'rgba(181, 124, 255, 0.7)' : 'rgba(0, 229, 255, 0.38)';
+            ctx.lineWidth = 1.2;
+            ctx.beginPath();
+            for (let s = 0; s <= 28; s++) {
+              const u = s / 28;
+              const nx = earthPl.wx + 0.015 + u * 0.24;
+              const pinch = 1.0 - 0.55 * recon * Math.sin(u * Math.PI);
+              const ny = earthPl.wy + hemi * (L * 0.55 + Math.pow(u, 0.5) * 0.052) * pinch;
+              const sx = toSX(nx), sy = toSY(ny);
+              if (s === 0) ctx.moveTo(sx, sy); else ctx.lineTo(sx, sy);
+            }
+            ctx.stroke();
+          }
+        });
+
+        const eBody = ctx.createRadialGradient(earthSX - earthSR * 0.3, earthSY - earthSR * 0.2, earthSR * 0.1, earthSX, earthSY, earthSR);
+        eBody.addColorStop(0, '#00e5ff');
+        eBody.addColorStop(0.55, '#1d4ed8');
+        eBody.addColorStop(1, '#020617');
+        ctx.fillStyle = eBody;
+        ctx.beginPath();
+        ctx.arc(earthSX, earthSY, earthSR, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = '#ffffff';
+        ctx.font = '700 11.5px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText('🌍 Earth (1.00 AU)', earthSX - 42, earthSY + earthSR + 15);
+
+        ctx.restore();
+      }
+
+      // ======================================================================
+      // 5. RENDER REAL SATELLITE EARTH IMPACT MAP
+      // ======================================================================
+      const CONTINENTS = [
+        [[-165,62],[-140,68],[-110,70],[-80,65],[-60,50],[-75,35],[-82,25],[-90,18],[-80,8],[-105,20],[-120,34],[-125,48],[-150,60]],
+        [[-80,10],[-60,10],[-35,-6],[-40,-22],[-55,-35],[-68,-54],[-74,-45],[-72,-18],[-80,0]],
+        [[-10,36],[-8,44],[5,52],[10,60],[28,70],[70,72],[130,68],[170,64],[142,45],[122,30],[105,12],[98,18],[88,22],[78,8],[72,20],[60,25],[48,30],[35,34],[26,38],[12,40],[0,36]],
+        [[-17,15],[-6,35],[10,37],[33,31],[40,12],[51,11],[40,-10],[35,-25],[20,-34],[14,-22],[9,4],[-8,5],[-17,15]],
+        [[114,-22],[130,-12],[142,-11],[153,-26],[146,-38],[130,-33],[115,-34],[114,-22]]
+      ];
+
+      function drawEarthImpactMap(vpX, vpY, vpW, vpH, elapsed, simTimeMs) {
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(vpX, vpY, vpW, vpH);
+        ctx.clip();
+
+        function lonLatToXY(lon, lat) {
+          return {
+            x: vpX + ((lon + 180) / 360) * vpW,
+            y: vpY + ((90 - lat) / 180) * vpH
+          };
+        }
+
+        if (earthMapReady) {
+          ctx.drawImage(earthMapImage, vpX, vpY, vpW, vpH);
+          ctx.fillStyle = 'rgba(4, 9, 20, 0.25)';
+          ctx.fillRect(vpX, vpY, vpW, vpH);
+        } else {
+          ctx.fillStyle = '#071426';
+          ctx.fillRect(vpX, vpY, vpW, vpH);
+          ctx.fillStyle = '#152c4a';
+          ctx.strokeStyle = 'rgba(0, 229, 255, 0.35)';
+          CONTINENTS.forEach((poly) => {
+            ctx.beginPath();
+            poly.forEach(([lon, lat], idx) => {
+              const pt = lonLatToXY(lon, lat);
+              if (idx === 0) ctx.moveTo(pt.x, pt.y); else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.closePath();
+            ctx.fill();
+            ctx.stroke();
+          });
+        }
+
+        const simDate = new Date(simTimeMs);
+        const utcHrs = simDate.getUTCHours() + simDate.getUTCMinutes() / 60;
+        const subsolarLon = ((12 - utcHrs) * 15 + 540) % 360 - 180;
+        const subPt = lonLatToXY(subsolarLon, 10);
+        const radR = Math.max(55, vpW * 0.18);
+
+        const impact = Math.max(state.earthImpactIntensity, PLANETS[2].hitNow);
+        if (impact > 0.08) {
+          const uvGrad = ctx.createRadialGradient(subPt.x, subPt.y, 5, subPt.x, subPt.y, radR);
+          uvGrad.addColorStop(0, `rgba(255, 42, 95, ${0.65 * impact})`);
+          uvGrad.addColorStop(0.55, `rgba(255, 184, 0, ${0.42 * impact})`);
+          uvGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = uvGrad;
+          ctx.beginPath();
+          ctx.arc(subPt.x, subPt.y, radR, 0, Math.PI * 2);
+          ctx.fill();
+
+          const auroraLat = Math.max(28, 67 - impact * 38);
+          const northY = vpY + ((90 - auroraLat) / 180) * vpH;
+          const southY = vpY + ((90 + auroraLat) / 180) * vpH;
+
+          const nGrad = ctx.createLinearGradient(0, vpY, 0, northY);
+          nGrad.addColorStop(0, `rgba(255, 42, 95, ${0.5 * impact})`);
+          nGrad.addColorStop(0.7, `rgba(0, 245, 155, ${0.38 * impact})`);
+          nGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = nGrad;
+          ctx.fillRect(vpX, vpY, vpW, northY - vpY);
+
+          const sGrad = ctx.createLinearGradient(0, vpY + vpH, 0, southY);
+          sGrad.addColorStop(0, `rgba(255, 42, 95, ${0.5 * impact})`);
+          sGrad.addColorStop(0.7, `rgba(0, 245, 155, ${0.38 * impact})`);
+          sGrad.addColorStop(1, 'rgba(0, 0, 0, 0)');
+          ctx.fillStyle = sGrad;
+          ctx.fillRect(vpX, southY, vpW, vpY + vpH - southY);
+        }
+
+        const uPt = lonLatToXY(state.userLon, state.userLat);
+        const ringR = 9 + Math.sin(elapsed * 6) * 4;
+
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.arc(uPt.x, uPt.y, ringR, 0, Math.PI * 2);
+        ctx.stroke();
+
+        ctx.fillStyle = '#00e5ff';
+        ctx.beginPath();
+        ctx.arc(uPt.x, uPt.y, 4.5, 0, Math.PI * 2);
+        ctx.fill();
+
+        const boxX = Math.min(vpX + vpW - 225, Math.max(vpX + 12, uPt.x + 12));
+        const boxY = Math.max(vpY + 16, uPt.y - 18);
+        ctx.fillStyle = 'rgba(14, 17, 26, 0.92)';
+        ctx.strokeStyle = '#00e5ff';
+        ctx.lineWidth = 1.2;
+        ctx.fillRect(boxX, boxY, 210, 38);
+        ctx.strokeRect(boxX, boxY, 210, 38);
+
+        ctx.fillStyle = '#fff';
+        ctx.font = '700 11.5px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText(`📍 ${state.userName.slice(0, 22)}`, boxX + 8, boxY + 15);
+        ctx.fillStyle = impact > 0.2 ? '#ff809f' : '#00f59b';
+        ctx.font = '600 10.5px "Plus Jakarta Sans", sans-serif';
+        ctx.fillText(
+          impact > 0.2 ? '⚡ CME WAVE HITTING NOW!' : '✓ Shield Calm at This Hour',
+          boxX + 8,
+          boxY + 30
+        );
+
+        ctx.restore();
+      }
+
+      // ======================================================================
+      // 6. MASSIVE INTERACTIVE TIMELINE RADAR CANVAS (-48h TO +48h)
+      //    Shows Launch Pins, Planetary Impact Markers, and Playhead!
+      // ======================================================================
+      const MIN_HR = -36;
+      const MAX_HR = 48;
+
+      function hourToX(hr) {
+        return ((hr - MIN_HR) / (MAX_HR - MIN_HR)) * TL_W;
+      }
+      function xToHour(x) {
+        return MIN_HR + Math.max(0, Math.min(1, x / TL_W)) * (MAX_HR - MIN_HR);
+      }
+
+      function renderTimelineRadar() {
+        tlCtx.fillStyle = '#06080f';
+        tlCtx.fillRect(0, 0, TL_W, TL_H);
+
+        // 1. Hour Grid Ticks (-36h to +48h)
+        tlCtx.strokeStyle = 'rgba(148, 163, 184, 0.14)';
+        tlCtx.fillStyle = '#7e8ba8';
+        tlCtx.font = '600 10px "JetBrains Mono", monospace';
+        for (let h = -36; h <= 48; h += 6) {
+          const x = hourToX(h);
+          tlCtx.beginPath();
+          tlCtx.moveTo(x, 0);
+          tlCtx.lineTo(x, TL_H);
+          tlCtx.stroke();
+          const lbl = h === 0 ? 'LIVE NOW (0h)' : `${h > 0 ? '+' : ''}${h}h`;
+          tlCtx.fillStyle = h === 0 ? '#00f59b' : '#7e8ba8';
+          tlCtx.fillText(lbl, x + 4, 13);
+        }
+
+        // 2. LIVE NOW (0.0h) Reference Line
+        const nowX = hourToX(0);
+        tlCtx.strokeStyle = 'rgba(0, 245, 155, 0.45)';
+        tlCtx.lineWidth = 2;
+        tlCtx.beginPath();
+        tlCtx.moveTo(nowX, 0);
+        tlCtx.lineTo(nowX, TL_H);
+        tlCtx.stroke();
+
+        // 3. Draw Event Launch Pins & Planetary Impact Markers on the Track
+        solarEvents.forEach((ev, idx) => {
+          const rowY = 28 + (idx % 2) * 20;
+          const lx = hourToX(ev.launchOffsetHours);
+
+          // Launch Marker
+          tlCtx.fillStyle = ev.launchOffsetHours <= 0 ? '#ff2a5f' : '#b57cff';
+          tlCtx.beginPath();
+          tlCtx.arc(lx, rowY, 4.5, 0, Math.PI * 2);
+          tlCtx.fill();
+
+          // Connect Launch to Planetary Impacts
+          ev.hits.forEach((hit) => {
+            const ix = hourToX(hit.impactOffsetHrs);
+            tlCtx.strokeStyle = hit.color;
+            tlCtx.lineWidth = 1.6;
+            tlCtx.beginPath();
+            tlCtx.moveTo(lx, rowY);
+            tlCtx.lineTo(ix, rowY);
+            tlCtx.stroke();
+
+            tlCtx.fillStyle = hit.color;
+            tlCtx.fillRect(ix - 3, rowY - 5, 6, 10);
+            tlCtx.font = '700 9.5px "Plus Jakarta Sans", sans-serif';
+            tlCtx.fillText(`${hit.icon} Hit ${hit.planetName}`, ix + 5, rowY + 3);
+          });
+        });
+
+        // 4. Current Playhead Scrubber Bar
+        const playX = hourToX(state.offsetHours);
+        tlCtx.strokeStyle = '#00e5ff';
+        tlCtx.lineWidth = 2.5;
+        tlCtx.beginPath();
+        tlCtx.moveTo(playX, 0);
+        tlCtx.lineTo(playX, TL_H);
+        tlCtx.stroke();
+
+        tlCtx.fillStyle = '#00e5ff';
+        tlCtx.beginPath();
+        tlCtx.moveTo(playX - 7, 0);
+        tlCtx.lineTo(playX + 7, 0);
+        tlCtx.lineTo(playX, 9);
+        tlCtx.closePath();
+        tlCtx.fill();
+      }
+
+      let scrubbingTimeline = false;
+      tlWrap.addEventListener('pointerdown', (e) => {
+        scrubbingTimeline = true;
+        const rect = tlCanvas.getBoundingClientRect();
+        state.offsetHours = xToHour(e.clientX - rect.left);
+        renderStormCardsUI();
+      });
+      window.addEventListener('pointerup', () => { scrubbingTimeline = false; });
+      window.addEventListener('pointermove', (e) => {
+        if (!scrubbingTimeline) return;
+        const rect = tlCanvas.getBoundingClientRect();
+        state.offsetHours = xToHour(e.clientX - rect.left);
+      });
+
+      // ======================================================================
+      // 7. UI CONTROLS & TELEMETRY SYNC
+      // ======================================================================
+      function updateAllTelemetry(simTimeMs) {
+        PLANETS.forEach((pl) => {
+          const stEl = document.getElementById(`pstat-${pl.id}`);
+          if (pl.hitNow > 0.15) {
+            stEl.textContent = '⚡ HIT NOW';
+            stEl.style.background = 'rgba(255, 42, 95, 0.25)';
+            stEl.style.color = '#ff809f';
+          } else {
+            stEl.textContent = `${pl.rAu.toFixed(2)} AU`;
+            stEl.style.background = 'rgba(255, 255, 255, 0.08)';
+            stEl.style.color = '#cbd5e1';
+          }
+        });
+
+        const simDate = new Date(simTimeMs);
+        const clockStr = simDate.toUTCString().slice(5, 22) + ' UTC';
+        document.getElementById('timeline-clock-readout').textContent =
+          Math.abs(state.offsetHours) < 0.2
+            ? `🔴 LIVE NOW (${clockStr})`
+            : `SIM TIME: ${clockStr} (${state.offsetHours >= 0 ? '+' : ''}${state.offsetHours.toFixed(1)}h)`;
+      }
+
+      document.querySelectorAll('.planet-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.planet-tab').forEach(t => t.classList.remove('selected'));
+          tab.classList.add('selected');
+          state.selectedPlanet = tab.dataset.planet;
+          const pl = PLANETS.find(p => p.id === state.selectedPlanet);
+          if (pl) {
+            document.getElementById('insp-planet-name').textContent = `${pl.icon} ${pl.name.toUpperCase()} (${pl.rAu.toFixed(2)} AU)`;
+          }
+        });
+      });
+
+      document.querySelectorAll('.dock-tab').forEach((tab) => {
+        tab.addEventListener('click', () => {
+          document.querySelectorAll('.dock-tab').forEach(t => t.classList.remove('active'));
+          tab.classList.add('active');
+          const target = tab.dataset.dtab;
+          document.getElementById('dpanel-storms').style.display = target === 'storms' ? 'flex' : 'none';
+          document.getElementById('dpanel-safety').style.display = target === 'safety' ? 'flex' : 'none';
+          document.getElementById('dpanel-sun').style.display = target === 'sun' ? 'flex' : 'none';
+        });
+      });
+
+      document.querySelectorAll('.stage-btn').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.stage-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          state.viewMode = btn.dataset.view;
+        });
+      });
+
+      document.getElementById('btn-play').addEventListener('click', (e) => {
+        state.playing = !state.playing;
+        e.target.textContent = state.playing ? '⏸ PAUSE' : '▶ PLAY';
+      });
+
+      document.getElementById('btn-live-now').addEventListener('click', () => {
+        state.offsetHours = 0.0;
+        renderStormCardsUI();
+      });
+
+      document.getElementById('btn-step-back').addEventListener('click', () => {
+        state.offsetHours = Math.max(MIN_HR, state.offsetHours - 6.0);
+        renderStormCardsUI();
+      });
+
+      document.getElementById('btn-step-fwd').addEventListener('click', () => {
+        state.offsetHours = Math.min(MAX_HR, state.offsetHours + 6.0);
+        renderStormCardsUI();
+      });
+
+      const speeds = [2.0, 5.0, 0.5];
+      let sIdx = 0;
+      document.getElementById('btn-warp-speed').addEventListener('click', (e) => {
+        sIdx = (sIdx + 1) % speeds.length;
+        state.warpHrsPerSec = speeds[sIdx];
+        e.target.textContent = `⚡ Speed: ${state.warpHrsPerSec} hr/sec`;
+      });
+
+      document.getElementById('location-select').addEventListener('change', (e) => {
+        const parts = e.target.value.split(',');
+        state.userLat = parseFloat(parts[0]);
+        state.userLon = parseFloat(parts[1]);
+        state.userName = parts.slice(2).join(',');
+      });
+
+      stageCanvas.addEventListener('click', (e) => {
+        const isSplit = state.viewMode === 'split';
+        const isMap = state.viewMode === 'map';
+        if (!isSplit && !isMap) return;
+        const rect = stageCanvas.getBoundingClientRect();
+        const y = e.clientY - rect.top;
+        const mapTop = isSplit ? H * 0.56 : 0;
+        const mapH = isSplit ? H * 0.44 : H;
+        if (y < mapTop) return;
+
+        state.userLon = Math.round(((e.clientX - rect.left) / W) * 360 - 180);
+        state.userLat = Math.round(90 - ((y - mapTop) / mapH) * 180);
+        state.userName = `Lat ${state.userLat}°, Lon ${state.userLon}°`;
+      });
+
+      // Live Sun Fallback
+      const sdoCanvas = document.getElementById('sdo-fallback-canvas');
+      const sdoCtx = sdoCanvas.getContext('2d');
+      sdoCtx.fillStyle = '#020408';
+      sdoCtx.fillRect(0, 0, 250, 250);
+      const sg = sdoCtx.createRadialGradient(125, 125, 10, 125, 125, 105);
+      sg.addColorStop(0, '#fb923c');
+      sg.addColorStop(0.8, '#9a2006');
+      sg.addColorStop(1, '#020408');
+      sdoCtx.fillStyle = sg;
+      sdoCtx.beginPath();
+      sdoCtx.arc(125, 125, 105, 0, Math.PI * 2);
+      sdoCtx.fill();
+
+      document.querySelectorAll('[data-sdo]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          document.getElementById('sdo-live-img').src = btn.dataset.sdo;
+          document.getElementById('sdo-lbl').textContent = btn.dataset.lbl;
+        });
+      });
+
+      // ======================================================================
+      // 8. MASTER 60 FPS LOOP
+      // ======================================================================
+      let lastTime = performance.now();
+      let uiRefreshTimer = 0;
+
+      function animate(now) {
+        requestAnimationFrame(animate);
+        const dt = Math.min((now - lastTime) / 1000, 0.05);
+        lastTime = now;
+        const elapsed = now / 1000;
+
+        if (state.playing && !scrubbingTimeline) {
+          state.offsetHours += dt * state.warpHrsPerSec;
+          if (state.offsetHours > MAX_HR) state.offsetHours = MIN_HR;
+        }
+
+        const simTimeMs = state.anchorNowMs + state.offsetHours * 3600000;
+        updatePlanetaryOrbits(simTimeMs);
+
+        ctx.clearRect(0, 0, W, H);
+        if (state.viewMode === 'split') {
+          const splitY = Math.floor(H * 0.56);
+          drawSpaceRadar(0, 0, W, splitY, elapsed, simTimeMs);
+          drawEarthImpactMap(0, splitY, W, H - splitY, elapsed, simTimeMs);
+          ctx.strokeStyle = '#262e45';
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, splitY);
+          ctx.lineTo(W, splitY);
+          ctx.stroke();
+        } else if (state.viewMode === 'map') {
+          drawEarthImpactMap(0, 0, W, H, elapsed, simTimeMs);
+        } else {
+          drawSpaceRadar(0, 0, W, H, elapsed, simTimeMs);
+        }
+
+        renderTimelineRadar();
+        updateAllTelemetry(simTimeMs);
+
+        uiRefreshTimer += dt;
+        if (uiRefreshTimer > 0.6) {
+          renderStormCardsUI();
+          uiRefreshTimer = 0;
+        }
+      }
+
+      requestAnimationFrame(animate);
+    })();
+  </script>
+</body>
+</html>
